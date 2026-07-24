@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "620671048354",
+    "project_id": "drugreport-87e04",
+    "storage_bucket": "drugreport-87e04.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620671048354:android:109dab6bf2c57629eb55fb",
+        "android_client_info": {
+          "package_name": "com.example.drugreport"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHo-zFOqe5O-84NxMbEYnCbc7mF3wqdSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
