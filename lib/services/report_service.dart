@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../models/report_model.dart';
 
@@ -17,10 +17,11 @@ class ReportService {
     return token;
   }
 
-  Future<String> createReport(String reporterToken, String description) async {
+  Future<String> createReport(String reporterToken, String description, {bool anonymous = true}) async {
     final ref = await _db.collection('reports').add({
       'reporterTokenId': reporterToken,
       'description': description,
+      'anonymous': anonymous,
       'imageUrls': [],
       'videoUrls': [],
       'verdict': 'pending',
@@ -37,15 +38,23 @@ class ReportService {
     });
   }
 
-  Future<String> uploadImage(File file, String reportId) async {
+  Future<String> uploadImage(XFile file, String reportId) async {
     final ref = FirebaseStorage.instance.ref('reports/$reportId/images/${_uuid.v4()}.jpg');
-    await ref.putFile(file);
+    final bytes = await file.readAsBytes();
+    await ref.putData(
+      bytes,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
     return ref.getDownloadURL();
   }
 
-  Future<String> uploadVideo(File file, String reportId) async {
+  Future<String> uploadVideo(XFile file, String reportId) async {
     final ref = FirebaseStorage.instance.ref('reports/$reportId/videos/${_uuid.v4()}.mp4');
-    await ref.putFile(file);
+    final bytes = await file.readAsBytes();
+    await ref.putData(
+      bytes,
+      SettableMetadata(contentType: 'video/mp4'),
+    );
     return ref.getDownloadURL();
   }
 
@@ -54,6 +63,15 @@ class ReportService {
         .collection('reports')
         .where('reporterTokenId', isEqualTo: reporterToken)
         .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((s) => s.docs.map((d) => ReportModel.fromMap(d.id, d.data())).toList());
+  }
+
+  Stream<List<ReportModel>> nearbyReports() {
+    return _db
+        .collection('reports')
+        .orderBy('createdAt', descending: true)
+        .limit(20)
         .snapshots()
         .map((s) => s.docs.map((d) => ReportModel.fromMap(d.id, d.data())).toList());
   }

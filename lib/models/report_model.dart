@@ -33,4 +33,17 @@ class ReportModel {
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'reporterTokenId': reporterTokenId,
+      'description': description,
+      'imageUrls': imageUrls,
+      'videoUrls': videoUrls,
+      'verdict': verdict,
+      'status': status,
+      'createdAt': createdAt,
+    };
+  }
 }

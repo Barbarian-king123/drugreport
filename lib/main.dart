@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/officer/officer_home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,13 +24,14 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0D0D12),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFE53341),
-          brightness: Brightness.dark,
-        ).copyWith(
-          primary: const Color(0xFFE53341),
-          surface: const Color(0xFF17171F),
-        ),
+        colorScheme:
+            ColorScheme.fromSeed(
+              seedColor: const Color(0xFFE53341),
+              brightness: Brightness.dark,
+            ).copyWith(
+              primary: const Color(0xFFE53341),
+              surface: const Color(0xFF17171F),
+            ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color(0xFF0D0D12),
           foregroundColor: Colors.white,
@@ -40,7 +43,9 @@ class MyApp extends StatelessWidget {
             backgroundColor: const Color(0xFFE53341),
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(52),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
@@ -48,7 +53,9 @@ class MyApp extends StatelessWidget {
             foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(52),
             side: const BorderSide(color: Color(0xFF2A2A35)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
         cardTheme: CardThemeData(
@@ -63,7 +70,10 @@ class MyApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFF17171F),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFF23232E)),
@@ -79,8 +89,11 @@ class MyApp extends StatelessWidget {
           hintStyle: TextStyle(color: Colors.grey[600]),
         ),
         chipTheme: ChipThemeData(
-          backgroundColor: const Color(0xFFE53341).withOpacity(0.15),
-          labelStyle: const TextStyle(color: Color(0xFFE53341), fontWeight: FontWeight.w600),
+          backgroundColor: const Color(0xFFE53341).withValues(alpha: 0.15),
+          labelStyle: const TextStyle(
+            color: Color(0xFFE53341),
+            fontWeight: FontWeight.w600,
+          ),
         ),
         textTheme: const TextTheme(
           bodyMedium: TextStyle(color: Colors.white),
@@ -111,9 +124,32 @@ class AuthGate extends StatelessWidget {
       future: _bypassSignIn(),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
-        return const HomeScreen();
+        final uid = FirebaseAuth.instance.currentUser!.uid;
+        return StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .snapshots(),
+          builder: (context, userSnap) {
+            if (!userSnap.hasData) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final userData = userSnap.data!.data() as Map<String, dynamic>?;
+            final role = userData?['role']?.toString().toLowerCase() ?? 'citizen';
+            if (role == 'officer') {
+              return const OfficerHomeScreen();
+            }
+
+            return const HomeScreen();
+          },
+        );
       },
     );
   }

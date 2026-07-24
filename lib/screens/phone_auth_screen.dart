@@ -5,9 +5,7 @@ import 'package:drugreport/firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -33,7 +31,6 @@ class PhoneAuthScreen extends StatefulWidget {
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   final _phoneController = TextEditingController();
   String _status = '';
-  String? _verificationId;
 
   Future<void> _sendOtp() async {
     setState(() => _status = 'Sending OTP...');
@@ -45,13 +42,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       verificationFailed: (e) {
         setState(() => _status = 'Error: ${e.message}');
       },
-      codeSent: (verificationId, resendToken) {
-        _verificationId = verificationId;
+      codeSent: (_, _) {
         setState(() => _status = 'OTP sent! Check your phone.');
       },
-      codeAutoRetrievalTimeout: (verificationId) {
-        _verificationId = verificationId;
-      },
+      codeAutoRetrievalTimeout: (_) {},
     );
   }
 
@@ -73,10 +67,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _sendOtp,
-              child: const Text('Send OTP'),
-            ),
+            ElevatedButton(onPressed: _sendOtp, child: const Text('Send OTP')),
             const SizedBox(height: 16),
             Text(_status),
           ],
