@@ -59,7 +59,7 @@ class HowItWorksScreen extends StatelessWidget {
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
                 leading: Container(
-                  width: 42,
+                  width: 41,
                   height: 42,
                   decoration: BoxDecoration(
                     color: const Color(0xFFE53341).withOpacity(0.18),
