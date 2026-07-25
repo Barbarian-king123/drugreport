@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
+import 'screens/auth/phone_auth_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/officer/officer_home_screen.dart';
 
@@ -105,37 +106,38 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// TEMP: bypasses phone OTP login using Firebase Anonymous Auth so you can
-/// test all screens without a real phone/SMS. Revert to phone auth flow
-/// (PhoneAuthScreen) before real use, since anonymous users have no
-/// verified phone number tied to them.
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
-  Future<void> _bypassSignIn() async {
-    if (FirebaseAuth.instance.currentUser == null) {
-      await FirebaseAuth.instance.signInAnonymously();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _bypassSignIn(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, authSnap) {
+        if (authSnap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        final uid = FirebaseAuth.instance.currentUser!.uid;
+
+        final user = authSnap.data;
+        if (user == null) {
+          return const PhoneAuthScreen();
+        }
+
         return StreamBuilder<DocumentSnapshot>(
           stream: FirebaseFirestore.instance
               .collection('users')
-              .doc(uid)
+              .doc(user.uid)
               .snapshots(),
           builder: (context, userSnap) {
-            if (!userSnap.hasData) {
+            if (userSnap.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            if (!userSnap.hasData || !userSnap.data!.exists) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
@@ -146,7 +148,6 @@ class AuthGate extends StatelessWidget {
             if (role == 'officer') {
               return const OfficerHomeScreen();
             }
-
             return const HomeScreen();
           },
         );
