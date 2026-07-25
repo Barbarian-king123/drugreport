@@ -107,12 +107,38 @@ class MyReportsScreen extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(8),
                                           color: Colors.black12,
-                                          image: DecorationImage(image: NetworkImage(r.imageUrls.first), fit: BoxFit.cover),
+                                        ),
+                                        clipBehavior: Clip.hardEdge,
+                                        child: Image.network(
+                                          r.imageUrls.first,
+                                          width: 72,
+                                          height: 72,
+                                          fit: BoxFit.cover,
+                                          loadingBuilder: (context, child, progress) {
+                                            if (progress == null) return child;
+                                            return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                                          },
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              color: Colors.black12,
+                                              child: const Center(
+                                                child: Icon(Icons.broken_image, color: Colors.grey, size: 28),
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ),
                                     Expanded(child: Text(r.description, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold))),
                                   ],
                                 ),
+                                if (r.imageUrls.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      '${r.imageUrls.length} photo(s) attached',
+                                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                    ),
+                                  ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
