@@ -44,7 +44,8 @@ dependencies:
   uuid: ^4.6.0
   intl: ^0.20.3
   provider: ^6.1.5+1
-  google_maps_flutter: ^2.3.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import '../../services/report_service.dart';
 import '../../models/report_model.dart';
 
@@ -14,12 +15,12 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  final Completer<GoogleMapController> _controller = Completer();
-  CameraPosition _initialCamera = const CameraPosition(target: LatLng(0, 0), zoom: 1.0);
-  final Set<Marker> _markers = {};
+  final MapController _mapController = MapController();
+  LatLng _initialCenter = const LatLng(0, 0);
+  double _initialZoom = 1.0;
+  final List<Marker> _markers = [];
   bool _showList = false;
   Position? _currentPosition;
-  Position? _pendingPosition;
   String? _statusMessage;
   bool _permissionDenied = false;
 
@@ -35,14 +36,12 @@ class _MapScreenState extends State<MapScreen> {
     if (!mounted) return;
 
     _currentPosition = pos;
-    _pendingPosition = pos;
-    _initialCamera = CameraPosition(target: LatLng(pos.latitude, pos.longitude), zoom: 15);
+    _initialCenter = LatLng(pos.latitude, pos.longitude);
+    _initialZoom = 15.0;
+    _updateMarkers(pos);
     setState(() {});
 
-    if (_controller.isCompleted) {
-      await _moveToPosition(pos);
-      _pendingPosition = null;
-    }
+    _moveMap(pos);
   }
 
   Future<Position?> _determinePosition() async {
@@ -90,20 +89,25 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
-  Future<void> _moveToPosition(Position pos) async {
-    final GoogleMapController controller = await _controller.future;
-    if (!mounted) return;
-    final camera = CameraPosition(target: LatLng(pos.latitude, pos.longitude), zoom: 15);
-    try {
-      await controller.animateCamera(CameraUpdate.newCameraPosition(camera));
-    } catch (_) {
-      return;
-    }
-    if (!mounted) return;
-    setState(() {
-      _markers.clear();
-      _markers.add(Marker(markerId: const MarkerId('me'), position: LatLng(pos.latitude, pos.longitude), infoWindow: const InfoWindow(title: 'Your location')));
-    });
+  void _moveMap(Position pos) {
+    _mapController.move(LatLng(pos.latitude, pos.longitude), 15.0);
+  }
+
+  void _updateMarkers(Position pos) {
+    _markers
+      ..clear()
+      ..add(
+        Marker(
+          point: LatLng(pos.latitude, pos.longitude),
+          width: 40,
+          height: 40,
+          builder: (context) => const Icon(
+            Icons.location_on,
+            color: Colors.red,
+            size: 40,
+          ),
+        ),
+      );
   }
 
   Widget _buildStatusOverlay() {
@@ -191,7 +195,9 @@ class _MapScreenState extends State<MapScreen> {
                       child: ListTile(
                         title: Text(r.description, maxLines: 2, overflow: TextOverflow.ellipsis),
                         subtitle: Text(r.verdict),
-                        leading: r.imageUrls.isNotEmpty ? Image.network(r.imageUrls.first, width: 56, height: 56, fit: BoxFit.cover) : null,
+                        leading: r.imageUrls.isNotEmpty
+                            ? Image.network(r.imageUrls.first, width: 56, height: 56, fit: BoxFit.cover)
+                            : null,
                       ),
                     );
                   },
@@ -200,20 +206,19 @@ class _MapScreenState extends State<MapScreen> {
             )
           : Stack(
               children: [
-                GoogleMap(
-                  initialCameraPosition: _initialCamera,
-                  markers: _markers,
-                  myLocationEnabled: !_permissionDenied,
-                  myLocationButtonEnabled: false,
-                  onMapCreated: (GoogleMapController controller) async {
-                    if (!_controller.isCompleted) {
-                      _controller.complete(controller);
-                    }
-                    if (_pendingPosition != null && mounted) {
-                      await _moveToPosition(_pendingPosition!);
-                      _pendingPosition = null;
-                    }
-                  },
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    center: _initialCenter,
+                    zoom: _initialZoom,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.yourcompany.drugreport',
+                    ),
+                    MarkerLayer(markers: _markers),
+                  ],
                 ),
                 _buildStatusOverlay(),
               ],
