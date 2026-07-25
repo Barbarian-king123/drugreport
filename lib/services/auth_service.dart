@@ -49,4 +49,23 @@ class AuthService {
   }
 
   Future<void> signOut() => _auth.signOut();
+
+  /// Returns true if the current user is an officer.
+  /// Checks the user's `role` field in the users doc first, then falls back
+  /// to querying an `officers` collection by phone number.
+  Future<bool> isOfficer() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    if (doc.exists) {
+      final role = doc.data()?['role'];
+      if (role == 'officer') return true;
+    }
+
+    // Fallback: check a dedicated officers collection by phone
+    final phone = user.phoneNumber ?? '';
+    if (phone.isEmpty) return false;
+    final q = await _firestore.collection('officers').where('phoneNumber', isEqualTo: phone).limit(1).get();
+    return q.docs.isNotEmpty;
+  }
 }

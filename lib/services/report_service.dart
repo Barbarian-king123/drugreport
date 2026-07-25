@@ -17,8 +17,8 @@ class ReportService {
     return token;
   }
 
-  Future<String> createReport(String reporterToken, String description, {bool anonymous = true}) async {
-    final ref = await _db.collection('reports').add({
+  Future<String> createReport(String reporterToken, String description, {bool anonymous = true, Map<String, dynamic>? location}) async {
+    final data = {
       'reporterTokenId': reporterToken,
       'description': description,
       'anonymous': anonymous,
@@ -27,7 +27,12 @@ class ReportService {
       'verdict': 'pending',
       'status': 'submitted',
       'createdAt': FieldValue.serverTimestamp(),
-    });
+    };
+    if (location != null) {
+      data['location'] = location;
+    }
+
+    final ref = await _db.collection('reports').add(data);
     return ref.id;
   }
 

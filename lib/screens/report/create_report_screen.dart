@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../services/report_service.dart';
 
 class CreateReportScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   final _reportService = ReportService();
   final List<XFile> _images = [];
   final List<XFile> _videos = [];
+  Map<String, dynamic>? _location;
   bool _submitting = false;
   bool _reportAnon = true;
 
@@ -45,6 +47,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         token,
         _descController.text.trim(),
         anonymous: _reportAnon,
+        location: _location,
       );
 
       final imageUrls = <String>[];
@@ -58,8 +61,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       await _reportService.attachMedia(reportId, imageUrls, videoUrls);
 
       if (!mounted) return;
+      // stop spinner before navigating so UI updates correctly
+      setState(() => _submitting = false);
+      // show confirmation
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report submitted')));
       Navigator.pop(context);
-      _snack('Report submitted!');
     } catch (e) {
       _snack('Error: $e');
     } finally {
@@ -85,6 +91,40 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               border: OutlineInputBorder(),
               hintText: 'What did you see? Provide details of the incident or activity.',
             ),
+          ),
+          const SizedBox(height: 20),
+          // Location attach
+          const Text('Attach location (optional)', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    try {
+                      final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best);
+                      setState(() {
+                        _location = {'lat': pos.latitude, 'lng': pos.longitude};
+                      });
+                      _snack('Location attached');
+                    } catch (e) {
+                      _snack('Failed to get location: $e');
+                    }
+                  },
+                  icon: const Icon(Icons.my_location),
+                  label: const Text('Use current location'),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Color(0xFF23232E)),
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF17171F),
+                    minimumSize: const Size(150, 46),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              if (_location != null)
+                Text('Lat:${_location!['lat'].toStringAsFixed(4)}', style: const TextStyle(color: Colors.white70)),
+            ],
           ),
           const SizedBox(height: 20),
           const Text('Add evidence (optional)', style: TextStyle(fontWeight: FontWeight.bold)),

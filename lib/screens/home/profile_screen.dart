@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../auth/phone_verify_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -69,6 +70,29 @@ class ProfileScreen extends StatelessWidget {
                       Text('Role: $role', style: const TextStyle(color: Colors.grey)),
                       const SizedBox(height: 6),
                       Text('Joined: ${DateTime.now().year}', style: const TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PhoneVerifyScreen())),
+                            child: const Text('Verify Phone'),
+                          ),
+                          const SizedBox(width: 12),
+                          OutlinedButton(
+                            onPressed: () async {
+                              final uid = FirebaseAuth.instance.currentUser!.uid;
+                              await FirebaseFirestore.instance.collection('officer_requests').doc(uid).set({
+                                'uid': uid,
+                                'phone': phone,
+                                'status': 'requested',
+                                'requestedAt': FieldValue.serverTimestamp(),
+                              });
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Officer role requested')));
+                            },
+                            child: const Text('Request Officer Role'),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

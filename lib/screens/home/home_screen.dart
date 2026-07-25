@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../home/nearby_reports_screen.dart';
+import '../home/map_screen.dart';
 import '../home/profile_screen.dart';
 import '../info/banned_screen.dart';
 import '../info/how_it_works_screen.dart';
@@ -179,11 +180,11 @@ class HomeScreen extends StatelessWidget {
                   _actionTile(
                     context,
                     icon: Icons.map_outlined,
-                    label: 'Nearby Reports',
+                    label: 'Map View',
                     color: const Color(0xFF1565C0),
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => NearbyReportsScreen()),
+                      MaterialPageRoute(builder: (_) => const MapScreen()),
                     ),
                   ),
                   _actionTile(

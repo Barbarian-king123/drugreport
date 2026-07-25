@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'case_detail_screen.dart';
+import 'officer_requests_screen.dart';
 
 class OfficerHomeScreen extends StatelessWidget {
   const OfficerHomeScreen({super.key});
@@ -13,6 +14,11 @@ class OfficerHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Case Queue'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.group_add),
+            tooltip: 'Officer requests',
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfficerRequestsScreen())),
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => FirebaseAuth.instance.signOut(),

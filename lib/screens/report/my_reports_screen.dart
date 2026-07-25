@@ -96,7 +96,23 @@ class MyReportsScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(r.description, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (r.imageUrls.isNotEmpty)
+                                      Container(
+                                        width: 72,
+                                        height: 72,
+                                        margin: const EdgeInsets.only(right: 12),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8),
+                                          color: Colors.black12,
+                                          image: DecorationImage(image: NetworkImage(r.imageUrls.first), fit: BoxFit.cover),
+                                        ),
+                                      ),
+                                    Expanded(child: Text(r.description, maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold))),
+                                  ],
+                                ),
                             const SizedBox(height: 8),
                             Row(
                               children: [
