@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/auth/phone_auth_screen.dart';
+import 'screens/auth/role_based_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/officer/officer_home_screen.dart';
 
@@ -150,6 +151,15 @@ class AuthGate extends StatelessWidget {
             }
 
             final userData = userSnap.data!.data() as Map<String, dynamic>?;
+
+            // New users land here first. Existing users (created before
+            // this field existed) default to `true` so they're never
+            // sent back to onboarding.
+            final onboarded = userData?['onboarded'] as bool? ?? true;
+            if (!onboarded) {
+              return const RoleSelectionScreen();
+            }
+
             final role = userData?['role']?.toString().toLowerCase() ?? 'citizen';
             if (role == 'officer') {
               return const OfficerHomeScreen();
