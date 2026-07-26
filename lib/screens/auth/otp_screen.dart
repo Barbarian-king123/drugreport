@@ -78,12 +78,19 @@ class _OtpScreenState extends State<OtpScreen> {
     });
     try {
       await _authService.verifyOtp(widget.verificationId, _code);
-      // AuthGate in main.dart auto-navigates once signed in.
+      if (!mounted) return;
+      // verifyOtp succeeding means AuthGate's underlying state has already
+      // changed — but this screen was pushed ON TOP of it via
+      // Navigator.push, so AuthGate rebuilding underneath does NOT
+      // automatically remove this route. Pop everything back to the
+      // root manually so the new AuthGate state (role selection /
+      // citizen / officer screen) actually becomes visible.
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _errorText = 'Incorrect code. Please try again.';
+        _errorText = e.toString().replaceFirst('Exception: ', '');
       });
       for (final c in _controllers) {
         c.clear();
