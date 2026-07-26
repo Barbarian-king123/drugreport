@@ -2,14 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+/// DEMO/SUBMISSION MODE TOGGLE
+/// -----------------------------------------------------------------
+/// true  -> tapping "Officer" instantly grants role: 'officer'.
+///          Use this for your project demo/submission so both flows
+///          are fully explorable without needing a second account to
+///          approve anyone.
+/// false -> tapping "Officer" only files a request; an existing
+///          officer must approve it before role changes. This is the
+///          correct, secure behavior for a real deployment.
+///
+/// Flip this one line when you're ready to ship for real.
+const bool kInstantOfficerAccessForDemo = true;
+
 /// Shown exactly once, right after a brand-new user finishes OTP
 /// verification (before they see any citizen/officer screen).
-///
-/// IMPORTANT: tapping "Officer" here does NOT grant officer access.
-/// It only files a request — same as the profile screen's "Request
-/// Officer Role" button. A citizen can freely tap it, but all it does
-/// is create a pending record an existing officer has to approve. The
-/// account's actual `role` field stays 'citizen' the entire time.
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
 
@@ -34,14 +41,24 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final user = FirebaseAuth.instance.currentUser!;
     setState(() => _loading = true);
 
-    final batch = FirebaseFirestore.instance.batch();
     final userRef =
         FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    if (kInstantOfficerAccessForDemo) {
+      // Demo mode: grant officer access immediately, no approval needed.
+      await userRef.update({
+        'onboarded': true,
+        'role': 'officer',
+      });
+      return;
+    }
+
+    // Production mode: role stays 'citizen', a pending request is filed,
+    // and an existing officer has to approve it from OfficerRequestsScreen.
+    final batch = FirebaseFirestore.instance.batch();
     final requestRef =
         FirebaseFirestore.instance.collection('officer_requests').doc(user.uid);
 
-    // role is deliberately NOT touched here — it stays 'citizen' until
-    // an existing officer approves this request.
     batch.update(userRef, {'onboarded': true});
     batch.set(requestRef, {
       'uid': user.uid,
@@ -93,12 +110,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 child: const Text('I\'m a Law Enforcement Officer'),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Officer accounts require verification by an existing '
-                'officer before you get access to the case queue. You\'ll '
-                'see the citizen app until then.',
+              Text(
+                kInstantOfficerAccessForDemo
+                    ? 'Demo mode: you\'ll get officer access immediately.'
+                    : 'Officer accounts require verification by an existing '
+                        'officer before you get access to the case queue. '
+                        'You\'ll see the citizen app until then.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 12.5),
+                style: const TextStyle(color: Colors.grey, fontSize: 12.5),
               ),
 
               if (_loading) ...[
