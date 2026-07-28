@@ -63,7 +63,7 @@ class OfficerHomeScreen extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    ts != null ? DateFormat('dd MMM, HH:mm').format(ts) : '',
+                    ts != null ? DateFormat('dd MMM, HH:m').format(ts) : '',
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.push(
