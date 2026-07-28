@@ -298,7 +298,7 @@ class _OtpScreenState extends State<OtpScreen> {
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
           ),
         ),
