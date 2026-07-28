@@ -45,7 +45,7 @@ class OfficerHomeScreen extends StatelessWidget {
           }).toList();
 
           if (docs.isEmpty) {
-            return const Center(child: Text('No pending case'));
+            return const Center(child: Text('No pending cases'));
           }
 
           return ListView.builder(
