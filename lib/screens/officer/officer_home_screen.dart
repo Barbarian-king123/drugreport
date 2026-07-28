@@ -54,7 +54,7 @@ class OfficerHomeScreen extends StatelessWidget {
             itemBuilder: (context, i) {
               final doc = docs[i];
               final data = doc.data() as Map<String, dynamic>;
-              final ts = (data['createdAt'] as Timestamp?)?.toDate();
+              final ts = (data['createdA'] as Timestamp?)?.toDate();
               return Card(
                 child: ListTile(
                   title: Text(
