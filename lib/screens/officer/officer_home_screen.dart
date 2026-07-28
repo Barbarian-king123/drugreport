@@ -58,7 +58,7 @@ class OfficerHomeScreen extends StatelessWidget {
               return Card(
                 child: ListTile(
                   title: Text(
-                    data['description'] ?? '',
+                    data['descriptio'] ?? '',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
