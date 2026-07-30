@@ -472,7 +472,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.incognito, size: 18, color: AppColors.textSecondary),
+                    icon: const Icon(Icons.privacy_tip_outlined, size: 18, color: AppColors.textSecondary),
                     label: const Text(
                       'Continue Anonymously (Quick Report)',
                       style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5),
