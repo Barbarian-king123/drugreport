@@ -90,7 +90,7 @@ class _OtpScreenState extends State<OtpScreen> {
       _errorText = null;
     });
     try {
-      await _authService.verifyOtp(widget.verificationId, _code);
+      await _authService.verifyOtp(widget.verificationId, _code, isOfficerMode: widget.isOfficerMode);
       if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
@@ -206,7 +206,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.flash_on, size: 16, color: AppColors.primaryCoral),
+                      Icon(Icons.verified_user_outlined, size: 16, color: AppColors.primaryCoral),
                       SizedBox(width: 6),
                       Text(
                         'Auto-fill Test Code (123456)',

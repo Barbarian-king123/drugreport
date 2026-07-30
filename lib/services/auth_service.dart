@@ -84,22 +84,17 @@ class AuthService {
     }
   }
 
-  Future<void> verifyOtp(String verificationId, String smsCode) async {
+  Future<void> verifyOtp(String verificationId, String smsCode, {bool isOfficerMode = false}) async {
     // 1. Handle Demo / Test OTP (Code "123456" or demo_vid_)
     if (verificationId.startsWith('demo_vid_') || smsCode == '123456') {
-      UserCredential userCred;
-      if (_auth.currentUser != null) {
-        userCred = UserCredentialMock(_auth.currentUser!);
-      } else {
-        userCred = await _auth.signInAnonymously();
-      }
+      final userCred = await _safeSignInAnonymously();
 
       final targetPhone = _lastPhoneSent ??
           (verificationId.startsWith('demo_vid_')
               ? verificationId.replaceFirst('demo_vid_', '')
               : '+91 98765 43210');
 
-      await _ensureUserDoc(userCred.user!, overridePhone: targetPhone);
+      await _ensureUserDoc(userCred.user!, overridePhone: targetPhone, isOfficerMode: isOfficerMode);
       return;
     }
 
@@ -118,7 +113,7 @@ class AuthService {
       } catch (e) {
         // Fallback for testing: if confirmation fails, attempt anonymous auth test sign-in
         if (smsCode == '123456' || kDebugMode) {
-          result = await _auth.signInAnonymously();
+          result = await _safeSignInAnonymously();
         } else {
           rethrow;
         }
@@ -136,17 +131,32 @@ class AuthService {
         });
       } catch (e) {
         if (smsCode == '123456') {
-          result = await _auth.signInAnonymously();
+          result = await _safeSignInAnonymously();
         } else {
           rethrow;
         }
       }
     }
 
-    await _ensureUserDoc(result.user!).timeout(
+    await _ensureUserDoc(result.user!, isOfficerMode: isOfficerMode).timeout(
       const Duration(seconds: 10),
       onTimeout: () => throw Exception('Could not save profile. Check network connection.'),
     );
+  }
+
+  Future<UserCredential> _safeSignInAnonymously() async {
+    if (_auth.currentUser != null) {
+      return UserCredentialMock(_auth.currentUser!);
+    }
+    try {
+      return await _auth.signInAnonymously();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'admin-restricted-operation' || e.code == 'operation-not-allowed') {
+        throw Exception(
+            'Anonymous sign-in is disabled in your Firebase Console. Please enable "Anonymous" under Firebase Console > Authentication > Sign-in method, or sign in using Phone OTP.');
+      }
+      rethrow;
+    }
   }
 
   /// Direct Officer Badge & Passcode Sign-In
@@ -172,12 +182,7 @@ class AuthService {
       throw Exception('Invalid passcode. Standard demo passcode is OFFICER123');
     }
 
-    UserCredential cred;
-    if (_auth.currentUser != null) {
-      cred = UserCredentialMock(_auth.currentUser!);
-    } else {
-      cred = await _auth.signInAnonymously();
-    }
+    final cred = await _safeSignInAnonymously();
 
     final uid = cred.user!.uid;
     final ref = _firestore.collection('users').doc(uid);
@@ -197,12 +202,7 @@ class AuthService {
 
   /// Instant 1-Tap Demo Quick Login for testing
   Future<void> signInAsDemoRole({required String role}) async {
-    UserCredential cred;
-    if (_auth.currentUser != null) {
-      cred = UserCredentialMock(_auth.currentUser!);
-    } else {
-      cred = await _auth.signInAnonymously();
-    }
+    final cred = await _safeSignInAnonymously();
 
     final uid = cred.user!.uid;
     final isOff = role.toLowerCase() == 'officer';
@@ -224,12 +224,7 @@ class AuthService {
 
   /// Instant Anonymous Citizen Sign-In
   Future<void> signInAnonymouslyCitizen() async {
-    UserCredential cred;
-    if (_auth.currentUser != null) {
-      cred = UserCredentialMock(_auth.currentUser!);
-    } else {
-      cred = await _auth.signInAnonymously();
-    }
+    final cred = await _safeSignInAnonymously();
 
     final uid = cred.user!.uid;
     final ref = _firestore.collection('users').doc(uid);
@@ -246,7 +241,7 @@ class AuthService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> _ensureUserDoc(User user, {String? overridePhone}) async {
+  Future<void> _ensureUserDoc(User user, {String? overridePhone, bool isOfficerMode = false}) async {
     final ref = _firestore.collection('users').doc(user.uid);
     final doc = await ref.get();
     final phoneToSave = (user.phoneNumber != null && user.phoneNumber!.isNotEmpty)
@@ -256,8 +251,8 @@ class AuthService {
     if (!doc.exists) {
       await ref.set({
         'phoneNumber': phoneToSave,
-        'role': 'citizen',
-        'onboarded': false, // true once they pick citizen/officer once
+        'role': isOfficerMode ? 'officer' : 'citizen',
+        'onboarded': isOfficerMode ? true : false,
         'trustScore': 100,
         'reportsSubmitted': 0,
         'reportsVerified': 0,
@@ -265,8 +260,14 @@ class AuthService {
         'suspended': false,
         'createdAt': FieldValue.serverTimestamp(),
       });
-    } else if (overridePhone != null && overridePhone.isNotEmpty) {
-      await ref.update({'phoneNumber': overridePhone});
+    } else {
+      final updates = <String, dynamic>{};
+      if (overridePhone != null && overridePhone.isNotEmpty) updates['phoneNumber'] = overridePhone;
+      if (isOfficerMode) {
+        updates['role'] = 'officer';
+        updates['onboarded'] = true;
+      }
+      if (updates.isNotEmpty) await ref.update(updates);
     }
   }
 

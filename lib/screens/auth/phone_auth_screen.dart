@@ -26,13 +26,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   String _getFlag(String code) {
     switch (code) {
       case '+91':
-        return '🇮🇳';
+        return 'IN';
       case '+1':
-        return '🇺🇸';
+        return 'US';
       case '+44':
-        return '🇬🇧';
+        return 'UK';
       default:
-        return '🌐';
+        return 'INT';
     }
   }
 
@@ -479,7 +479,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     ),
                   ),
                 ] else ...[
-                  // OFFICER TAB: BADGE ID & PASSCODE
+                  // OFFICER TAB: BADGE ID & PASSCODE OR PHONE OTP
                   Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
@@ -490,22 +490,37 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: const [
+                            Icon(Icons.badge_outlined, color: AppColors.primaryCoral, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'OFFICER BADGE LOGIN',
+                              style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         const Text(
-                          'OFFICER BADGE ID',
+                          'BADGE ID',
                           style: TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         TextField(
                           controller: _badgeIdController,
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15.5),
+                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
                           decoration: InputDecoration(
                             hintText: 'e.g. BADGE-101',
-                            prefixIcon: const Icon(Icons.badge_outlined, color: AppColors.primaryCoral, size: 20),
+                            prefixIcon: const Icon(Icons.badge, color: AppColors.primaryCoral, size: 20),
                             filled: true,
                             fillColor: const Color(0xFF1F202A),
                             border: OutlineInputBorder(
@@ -514,21 +529,20 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 14),
                         const Text(
                           'DEPARTMENT PASSCODE',
                           style: TextStyle(
                             color: AppColors.textSecondary,
-                            fontSize: 12,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 1.1,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         TextField(
                           controller: _passcodeController,
                           obscureText: true,
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15.5),
+                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
                           decoration: InputDecoration(
                             hintText: 'Passcode (Demo: OFFICER123)',
                             prefixIcon: const Icon(Icons.lock_outline, color: AppColors.primaryCoral, size: 20),
@@ -540,46 +554,228 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Standard demo passcode is OFFICER123',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 11.5),
+                        const SizedBox(height: 14),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : _loginWithOfficerBadge,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryCoral,
+                              foregroundColor: AppColors.onCoralText,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: _loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation(AppColors.onCoralText),
+                                    ),
+                                  )
+                                : const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.shield, size: 18),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Login with Badge Credentials',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
+                  // Divider OR
+                  Row(
+                    children: const [
+                      Expanded(child: Divider(color: AppColors.surfaceBorder)),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'OR VERIFY WITH OFFICER PHONE',
+                          style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Expanded(child: Divider(color: AppColors.surfaceBorder)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // OFFICER PHONE OTP BOX
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.surfaceBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'OFFICER PHONE NUMBER',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                _phoneController.text = '9999999999';
+                                setState(() => _errorText = null);
+                              },
+                              child: const Text(
+                                'Use Test Phone',
+                                style: TextStyle(
+                                  color: AppColors.primaryCoral,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1F202A),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: AppColors.surfaceBorder),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(_getFlag(_selectedCountryCode), style: const TextStyle(fontSize: 16)),
+                                  const SizedBox(width: 6),
+                                  DropdownButton<String>(
+                                    value: _selectedCountryCode,
+                                    underline: const SizedBox(),
+                                    isDense: true,
+                                    dropdownColor: AppColors.surfaceElevated,
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    items: const [
+                                      DropdownMenuItem(value: '+91', child: Text('+91')),
+                                      DropdownMenuItem(value: '+1', child: Text('+1')),
+                                      DropdownMenuItem(value: '+44', child: Text('+44')),
+                                    ],
+                                    onChanged: (val) {
+                                      if (val != null) setState(() => _selectedCountryCode = val);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1F202A),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: _errorText != null
+                                        ? AppColors.criticalRed
+                                        : AppColors.surfaceBorder,
+                                  ),
+                                ),
+                                child: TextFormField(
+                                  controller: _phoneController,
+                                  keyboardType: TextInputType.phone,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  decoration: const InputDecoration(
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 14),
+                                    hintText: '98765 43210',
+                                    hintStyle: TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  validator: (val) {
+                                    final digits = (val ?? '').trim();
+                                    if (digits.isEmpty) return 'Enter officer phone number';
+                                    if (digits.length < 7 || digits.length > 12) return 'Enter a valid phone number';
+                                    return null;
+                                  },
+                                  onChanged: (_) {
+                                    if (_errorText != null) {
+                                      setState(() => _errorText = null);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
                   SizedBox(
                     width: double.infinity,
-                    height: 54,
+                    height: 50,
                     child: ElevatedButton(
-                      onPressed: _loading ? null : _loginWithOfficerBadge,
+                      onPressed: _loading ? null : _sendOtp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryCoral,
-                        foregroundColor: AppColors.onCoralText,
+                        backgroundColor: AppColors.surfaceElevated,
+                        foregroundColor: AppColors.textPrimary,
+                        side: const BorderSide(color: AppColors.surfaceBorder),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: _loading
                           ? const SizedBox(
-                              width: 22,
-                              height: 22,
+                              width: 20,
+                              height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation(AppColors.onCoralText),
+                                valueColor: AlwaysStoppedAnimation(AppColors.primaryCoral),
                               ),
                             )
                           : const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.shield, size: 20),
+                                Icon(Icons.phone_android, size: 18, color: AppColors.primaryCoral),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Access Officer Dashboard',
+                                  'Send Officer OTP',
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -611,7 +807,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
                 const SizedBox(height: 24),
 
-                // ⚡ QUICK DEMO MODE SWITCHER BAR
+                // QUICK DEMO / TESTING ACCESS SWITCHER BAR
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -624,10 +820,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
-                          Icon(Icons.bolt, color: AppColors.highPriorityAmber, size: 18),
+                          Icon(Icons.tune_outlined, color: AppColors.primaryCoral, size: 18),
                           SizedBox(width: 6),
                           Text(
-                            'Demo Quick Access (No OTP Required)',
+                            'Quick System Access (Evaluation Mode)',
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 13.5,
@@ -652,9 +848,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.person, size: 16, color: AppColors.textPrimary),
+                                  Icon(Icons.person_outline, size: 16, color: AppColors.textPrimary),
                                   SizedBox(width: 6),
-                                  Text('Demo Citizen', style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+                                  Text('Citizen Portal', style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
                                 ],
                               ),
                             ),
@@ -673,9 +869,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.local_police, size: 16, color: AppColors.primaryCoral),
+                                  Icon(Icons.shield_outlined, size: 16, color: AppColors.primaryCoral),
                                   SizedBox(width: 6),
-                                  Text('Demo Officer', style: TextStyle(color: AppColors.primaryCoral, fontSize: 13, fontWeight: FontWeight.bold)),
+                                  Text('Officer Portal', style: TextStyle(color: AppColors.primaryCoral, fontSize: 13, fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             ),
