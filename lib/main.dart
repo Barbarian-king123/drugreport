@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
+import 'theme/app_theme.dart';
 import 'screens/auth/phone_auth_screen.dart';
 import 'screens/auth/role_based_screen.dart';
 import 'screens/home/home_screen.dart';
@@ -27,87 +28,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Drug Report App',
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0D0D12),
-        colorScheme:
-            ColorScheme.fromSeed(
-              seedColor: const Color(0xFFE53341),
-              brightness: Brightness.dark,
-            ).copyWith(
-              primary: const Color(0xFFE53341),
-              surface: const Color(0xFF17171F),
-            ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0D0D12),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: false,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE53341),
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(52),
-            side: const BorderSide(color: Color(0xFF2A2A35)),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        cardTheme: CardThemeData(
-          color: const Color(0xFF17171F),
-          elevation: 0,
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFF23232E)),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF17171F),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 14,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF23232E)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF23232E)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFFE53341)),
-          ),
-          hintStyle: TextStyle(color: Colors.grey[600]),
-        ),
-        chipTheme: ChipThemeData(
-          backgroundColor: const Color(0xFFE53341).withValues(alpha: 0.15),
-          labelStyle: const TextStyle(
-            color: Color(0xFFE53341),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Colors.white),
-          bodyLarge: TextStyle(color: Colors.white),
-        ),
-      ),
+      title: 'DrugReport App',
+      theme: AppTheme.darkTheme,
       home: const AuthGate(),
     );
   }
@@ -123,7 +45,10 @@ class AuthGate extends StatelessWidget {
       builder: (context, authSnap) {
         if (authSnap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            backgroundColor: AppColors.bg,
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primaryCoral),
+            ),
           );
         }
 
@@ -140,21 +65,24 @@ class AuthGate extends StatelessWidget {
           builder: (context, userSnap) {
             if (userSnap.connectionState == ConnectionState.waiting) {
               return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+                backgroundColor: AppColors.bg,
+                body: Center(
+                  child: CircularProgressIndicator(color: AppColors.primaryCoral),
+                ),
               );
             }
 
             if (!userSnap.hasData || !userSnap.data!.exists) {
               return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
+                backgroundColor: AppColors.bg,
+                body: Center(
+                  child: CircularProgressIndicator(color: AppColors.primaryCoral),
+                ),
               );
             }
 
             final userData = userSnap.data!.data() as Map<String, dynamic>?;
 
-            // New users land here first. Existing users (created before
-            // this field existed) default to `true` so they're never
-            // sent back to onboarding.
             final onboarded = userData?['onboarded'] as bool? ?? true;
             if (!onboarded) {
               return const RoleSelectionScreen();

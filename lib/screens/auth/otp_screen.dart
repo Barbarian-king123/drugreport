@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/auth_service.dart';
-import 'phone_auth_screen.dart'; // for AppColors
+import '../../theme/app_theme.dart';
+import '../../widgets/app_shield_logo.dart';
 
 class OtpScreen extends StatefulWidget {
   final String verificationId;
@@ -79,12 +80,6 @@ class _OtpScreenState extends State<OtpScreen> {
     try {
       await _authService.verifyOtp(widget.verificationId, _code);
       if (!mounted) return;
-      // verifyOtp succeeding means AuthGate's underlying state has already
-      // changed — but this screen was pushed ON TOP of it via
-      // Navigator.push, so AuthGate rebuilding underneath does NOT
-      // automatically remove this route. Pop everything back to the
-      // root manually so the new AuthGate state (role selection /
-      // citizen / officer screen) actually becomes visible.
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (!mounted) return;
@@ -132,38 +127,45 @@ class _OtpScreenState extends State<OtpScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.bg,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 12),
+              const AppShieldLogo(size: 52),
+              const SizedBox(height: 20),
               const Text(
-                'Verify Your Number',
+                'Verify Security Code',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 24,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
                   style: const TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14,
+                    height: 1.4,
                   ),
                   children: [
                     const TextSpan(text: 'Enter the 6-digit code sent to\n'),
                     TextSpan(
                       text: widget.phoneDisplay,
                       style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryCoral,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -171,7 +173,7 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
               const SizedBox(height: 36),
 
-              // ---- OTP boxes ----
+              // OTP Input Boxes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(_otpLength, (i) => _otpBox(i)),
@@ -182,14 +184,13 @@ class _OtpScreenState extends State<OtpScreen> {
                 Text(
                   _errorText!,
                   textAlign: TextAlign.center,
-                  style:
-                      const TextStyle(color: AppColors.primary, fontSize: 13),
+                  style: const TextStyle(color: AppColors.criticalRed, fontSize: 13),
                 ),
               ],
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // ---- Resend row ----
+              // Resend Timer Row
               Center(
                 child: _secondsLeft > 0
                     ? Text(
@@ -204,9 +205,9 @@ class _OtpScreenState extends State<OtpScreen> {
                         child: const Text(
                           'Resend OTP',
                           style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryCoral,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
@@ -215,14 +216,13 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 32),
 
               SizedBox(
+                width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
                   onPressed: _loading ? null : _verify,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor:
-                        AppColors.primary.withOpacity(0.5),
-                    elevation: 0,
+                    backgroundColor: AppColors.primaryCoral,
+                    foregroundColor: AppColors.onCoralText,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -232,17 +232,15 @@ class _OtpScreenState extends State<OtpScreen> {
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation(AppColors.onCoralText),
                           ),
                         )
                       : const Text(
-                          'Verify & Continue',
+                          'Verify & Access Portal',
                           style: TextStyle(
-                            color: Colors.white,
                             fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.2,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                 ),
@@ -282,8 +280,8 @@ class _OtpScreenState extends State<OtpScreen> {
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         style: const TextStyle(
           color: AppColors.textPrimary,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
         ),
         decoration: InputDecoration(
           counterText: '',
@@ -293,13 +291,13 @@ class _OtpScreenState extends State<OtpScreen> {
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(
-              color: isFilled ? AppColors.primary : AppColors.surfaceBorder,
-              width: isFilled ? 1.4 : 1,
+              color: isFilled ? AppColors.primaryCoral : AppColors.surfaceBorder,
+              width: isFilled ? 1.5 : 1,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.6),
+            borderSide: const BorderSide(color: AppColors.primaryCoral, width: 2),
           ),
         ),
         onChanged: (value) => _onDigitChanged(index, value),
