@@ -8,10 +8,13 @@ import '../../widgets/app_shield_logo.dart';
 class OtpScreen extends StatefulWidget {
   final String verificationId;
   final String phoneDisplay;
+  final bool isOfficerMode;
+
   const OtpScreen({
     super.key,
     required this.verificationId,
     required this.phoneDisplay,
+    this.isOfficerMode = false,
   });
 
   @override
@@ -52,6 +55,15 @@ class _OtpScreenState extends State<OtpScreen> {
   }
 
   String get _code => _controllers.map((c) => c.text).join();
+
+  void _fillTestOtp() {
+    const testCode = '123456';
+    for (int i = 0; i < _otpLength; i++) {
+      _controllers[i].text = testCode[i];
+    }
+    setState(() => _errorText = null);
+    _verify();
+  }
 
   void _onDigitChanged(int index, String value) {
     if (_errorText != null) setState(() => _errorText = null);
@@ -133,7 +145,7 @@ class _OtpScreenState extends State<OtpScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -141,10 +153,10 @@ class _OtpScreenState extends State<OtpScreen> {
               const SizedBox(height: 12),
               const AppShieldLogo(size: 52),
               const SizedBox(height: 20),
-              const Text(
-                'Verify Security Code',
+              Text(
+                widget.isOfficerMode ? 'Verify Officer Passcode' : 'Verify Security Code',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -171,12 +183,42 @@ class _OtpScreenState extends State<OtpScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 28),
 
               // OTP Input Boxes
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(_otpLength, (i) => _otpBox(i)),
+              ),
+              const SizedBox(height: 16),
+
+              // Quick Auto-Fill Test Code Button
+              InkWell(
+                onTap: _loading ? null : _fillTestOtp,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryCoral.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.primaryCoral.withValues(alpha: 0.3)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.flash_on, size: 16, color: AppColors.primaryCoral),
+                      SizedBox(width: 6),
+                      Text(
+                        'Auto-fill Test Code (123456)',
+                        style: TextStyle(
+                          color: AppColors.primaryCoral,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
 
               if (_errorText != null) ...[
@@ -188,7 +230,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 ),
               ],
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Resend Timer Row
               Center(
@@ -213,7 +255,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
 
               SizedBox(
                 width: double.infinity,
