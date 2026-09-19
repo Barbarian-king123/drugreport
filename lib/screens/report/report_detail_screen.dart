@@ -161,11 +161,19 @@ class ReportDetailScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.location_on_outlined, color: AppColors.primaryCoral, size: 20),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    report['location'] ?? '1289 Oakwood Dr, Springfield',
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
-                  ),
+                Builder(
+                  builder: (context) {
+                    final rawLoc = report['location'];
+                    final locText = rawLoc is Map
+                        ? (rawLoc['address']?.toString() ?? 'Palayam, Thiruvananthapuram')
+                        : (rawLoc?.toString() ?? 'Palayam, Thiruvananthapuram');
+                    return Expanded(
+                      child: Text(
+                        locText,
+                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

@@ -38,43 +38,49 @@ class _CaseDetailScreenState extends State<CaseDetailScreen> {
           .doc(widget.reportId);
       final reporterTokenId = widget.data['reporterTokenId'];
 
-      await FirebaseFirestore.instance.runTransaction((tx) async {
-        tx.update(reportRef, {
-          'verdict': verdict,
-          'status': verdict == 'fabricated'
-              ? 'fineIssued'
-              : verdict == 'investigating'
-                  ? 'investigating'
-                  : 'closed',
-          'reasonCode': reasonCode,
-          'verdictAt': FieldValue.serverTimestamp(),
-        });
+      DocumentReference? userRef;
+      if (reporterTokenId != null && verdict != 'investigating') {
+        final tokenQuery = await FirebaseFirestore.instance
+            .collection('reporter_tokens')
+            .where('token', isEqualTo: reporterTokenId)
+            .limit(1)
+            .get();
 
-        if (reporterTokenId != null && verdict != 'investigating') {
-          final tokenQuery = await FirebaseFirestore.instance
-              .collection('reporter_tokens')
-              .where('token', isEqualTo: reporterTokenId)
-              .limit(1)
-              .get();
-
-          if (tokenQuery.docs.isNotEmpty) {
-            final uid = tokenQuery.docs.first.data()['uid'];
-            final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
-
-            if (verdict == 'verified') {
-              tx.update(userRef, {
-                'trustScore': FieldValue.increment(5),
-                'reportsVerified': FieldValue.increment(1),
-              });
-            } else if (verdict == 'fabricated') {
-              tx.update(userRef, {
-                'trustScore': FieldValue.increment(-20),
-                'reportsFabricated': FieldValue.increment(1),
-              });
-            }
+        if (tokenQuery.docs.isNotEmpty) {
+          final uid = tokenQuery.docs.first.data()['uid'];
+          if (uid != null && uid.toString().isNotEmpty) {
+            userRef = FirebaseFirestore.instance.collection('users').doc(uid.toString());
           }
         }
+      }
+
+      final batch = FirebaseFirestore.instance.batch();
+      batch.update(reportRef, {
+        'verdict': verdict,
+        'status': verdict == 'fabricated'
+            ? 'fineIssued'
+            : verdict == 'investigating'
+                ? 'investigating'
+                : 'closed',
+        'reasonCode': reasonCode,
+        'verdictAt': FieldValue.serverTimestamp(),
       });
+
+      if (userRef != null) {
+        if (verdict == 'verified') {
+          batch.update(userRef, {
+            'trustScore': FieldValue.increment(5),
+            'reportsVerified': FieldValue.increment(1),
+          });
+        } else if (verdict == 'fabricated') {
+          batch.update(userRef, {
+            'trustScore': FieldValue.increment(-20),
+            'reportsFabricated': FieldValue.increment(1),
+          });
+        }
+      }
+
+      await batch.commit();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

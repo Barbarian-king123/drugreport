@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_shield_logo.dart';
+import '../auth/logout_screen.dart';
 import '../report/create_report_screen.dart';
 import '../report/my_reports_screen.dart';
 import '../report/report_detail_screen.dart';
@@ -64,6 +65,14 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const CreateReportScreen()),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: AppColors.textSecondary),
+            tooltip: 'Log Out',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LogoutScreen()),
             ),
           ),
           GestureDetector(

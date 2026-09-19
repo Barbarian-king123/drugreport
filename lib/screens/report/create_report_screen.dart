@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,16 +42,20 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         _location = {
           'lat': pos.latitude,
           'lng': pos.longitude,
-          'address': 'MG Road, Bengaluru',
+          'latitude': pos.latitude,
+          'longitude': pos.longitude,
+          'address': 'Palayam, Thiruvananthapuram',
         };
       });
     } catch (_) {
-      // Fallback location for demo
+      // Fallback location for TVM
       setState(() {
         _location = {
-          'lat': 12.9716,
-          'lng': 77.5946,
-          'address': 'MG Road, Bengaluru',
+          'lat': 8.5241,
+          'lng': 76.9366,
+          'latitude': 8.5241,
+          'longitude': 76.9366,
+          'address': 'Palayam, Thiruvananthapuram',
         };
       });
     }
@@ -432,12 +437,19 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(14),
-                              child: Image.file(
-                                File(file.path),
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              ),
+                              child: kIsWeb
+                                  ? Image.network(
+                                      file.path,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      File(file.path),
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
                             ),
                             Positioned(
                               top: 6,

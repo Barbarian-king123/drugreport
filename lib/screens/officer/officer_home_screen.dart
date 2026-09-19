@@ -3,8 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_shield_logo.dart';
+import '../auth/logout_screen.dart';
 import 'case_detail_screen.dart';
-import 'officer_requests_screen.dart';
 import '../home/profile_screen.dart';
 import '../home/map_screen.dart';
 
@@ -57,11 +57,11 @@ class _OfficerHomeScreenState extends State<OfficerHomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.group_add_outlined, color: AppColors.textSecondary),
-            tooltip: 'Officer Requests',
+            icon: const Icon(Icons.logout_rounded, color: AppColors.textSecondary),
+            tooltip: 'Log Out',
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const OfficerRequestsScreen()),
+              MaterialPageRoute(builder: (_) => const LogoutScreen()),
             ),
           ),
           GestureDetector(

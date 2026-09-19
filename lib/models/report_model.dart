@@ -9,6 +9,7 @@ class ReportModel {
   final String verdict;
   final String status;
   final DateTime? createdAt;
+  final Map<String, dynamic>? location;
 
   ReportModel({
     required this.id,
@@ -19,6 +20,7 @@ class ReportModel {
     required this.verdict,
     required this.status,
     this.createdAt,
+    this.location,
   });
 
   factory ReportModel.fromMap(String id, Map<String, dynamic> map) {
@@ -31,6 +33,7 @@ class ReportModel {
       verdict: map['verdict'] ?? 'pending',
       status: map['status'] ?? 'submitted',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+      location: map['location'] as Map<String, dynamic>?,
     );
   }
 
@@ -44,6 +47,7 @@ class ReportModel {
       'verdict': verdict,
       'status': status,
       'createdAt': createdAt,
+      'location': location,
     };
   }
 }

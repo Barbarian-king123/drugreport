@@ -53,9 +53,25 @@ class OfficerRequestsScreen extends StatelessWidget {
                   title: Text('User: ${data['uid'] ?? ''}'),
                   subtitle: Text('Phone: $phone'),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                    TextButton(onPressed: () async { await _reject(RequestSnapshot(doc.id, data)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rejected'))); }, child: const Text('Reject')),
+                    TextButton(
+                      onPressed: () async {
+                        await _reject(RequestSnapshot(doc.id, data));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rejected')));
+                        }
+                      },
+                      child: const Text('Reject'),
+                    ),
                     const SizedBox(width: 8),
-                    ElevatedButton(onPressed: () async { await _approve(RequestSnapshot(doc.id, data)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Approved'))); }, child: const Text('Approve')),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await _approve(RequestSnapshot(doc.id, data));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Approved')));
+                        }
+                      },
+                      child: const Text('Approve'),
+                    ),
                   ]),
                 ),
               );
