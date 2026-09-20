@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/auth_service.dart';
@@ -280,7 +281,35 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Content View based on Selected Tab
+                // Web Demo Notice
+                if (kIsWeb) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A2035),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF2D4F8A)),
+                    ),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.info_outline, color: Color(0xFF5B9BD5), size: 18),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Web Demo: Enter any phone number and use OTP code 123456 to sign in. Or tap "Continue Anonymously".',
+                            style: TextStyle(
+                              color: Color(0xFF8AB4D8),
+                              fontSize: 12.5,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
+
                 if (_selectedTab == 0) ...[
                   // CITIZEN TAB: PHONE NUMBER INPUT
                   Container(

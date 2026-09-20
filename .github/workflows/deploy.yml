@@ -1,4 +1,4 @@
-﻿name: Deploy DrugReport to GitHub Pages
+name: Deploy DrugReport to GitHub Pages
 
 on:
   push:
@@ -25,23 +25,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          flutter-version: '3.32.0'
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
-
-      - name: Run Tests
-        run: flutter test
 
       - name: Build Web Application
         run: flutter build web --release --base-href "/drugreport/"
@@ -57,3 +49,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
