@@ -52,6 +52,19 @@ class AuthGate extends StatelessWidget {
           );
         }
 
+        if (authSnap.hasError) {
+          return Scaffold(
+            backgroundColor: AppColors.bg,
+            body: Center(
+              child: Text(
+                'Authentication error: ${authSnap.error}',
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
         final user = authSnap.data;
         if (user == null) {
           return const PhoneAuthScreen();
@@ -72,13 +85,23 @@ class AuthGate extends StatelessWidget {
               );
             }
 
-            if (!userSnap.hasData || !userSnap.data!.exists) {
-              return const Scaffold(
+            if (userSnap.hasError) {
+              return Scaffold(
                 backgroundColor: AppColors.bg,
                 body: Center(
-                  child: CircularProgressIndicator(color: AppColors.primaryCoral),
+                  child: Text(
+                    'Something went wrong: ${userSnap.error}',
+                    style: const TextStyle(color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               );
+            }
+
+            if (!userSnap.hasData || !userSnap.data!.exists) {
+              // User is authenticated but has no Firestore profile doc yet.
+              // Send them into role selection instead of spinning forever.
+              return const RoleSelectionScreen();
             }
 
             final userData = userSnap.data!.data() as Map<String, dynamic>?;
