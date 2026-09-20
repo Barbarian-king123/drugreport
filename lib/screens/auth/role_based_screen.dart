@@ -30,9 +30,17 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   Future<void> _continueAsCitizen() async {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     setState(() => _loading = true);
-    await FirebaseFirestore.instance.collection('users').doc(uid).update({
-      'onboarded': true,
-    });
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(uid)
+          .set({'onboarded': true, 'role': 'citizen'}, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 10));
+    } catch (_) {
+      // Even if Firestore write fails, don't leave user stuck.
+      // AuthGate will handle the fallback.
+    }
+    if (mounted) setState(() => _loading = false);
     // AuthGate's live stream picks this up automatically and routes
     // to HomeScreen — no manual navigation needed here.
   }
@@ -44,30 +52,35 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     final userRef =
         FirebaseFirestore.instance.collection('users').doc(user.uid);
 
-    if (kInstantOfficerAccessForDemo) {
-      // Demo mode: grant officer access immediately, no approval needed.
-      await userRef.update({
-        'onboarded': true,
-        'role': 'officer',
-      });
-      return;
+    try {
+      if (kInstantOfficerAccessForDemo) {
+        // Demo mode: grant officer access immediately, no approval needed.
+        // Use set+merge so it works even if doc doesn't exist yet.
+        await userRef
+            .set({'onboarded': true, 'role': 'officer'}, SetOptions(merge: true))
+            .timeout(const Duration(seconds: 10));
+      } else {
+        // Production mode: role stays 'citizen', a pending request is filed,
+        // and an existing officer has to approve it from OfficerRequestsScreen.
+        final batch = FirebaseFirestore.instance.batch();
+        final requestRef = FirebaseFirestore.instance
+            .collection('officer_requests')
+            .doc(user.uid);
+
+        batch.set(userRef, {'onboarded': true}, SetOptions(merge: true));
+        batch.set(requestRef, {
+          'uid': user.uid,
+          'phone': user.phoneNumber ?? '',
+          'status': 'requested',
+          'requestedAt': FieldValue.serverTimestamp(),
+        });
+
+        await batch.commit().timeout(const Duration(seconds: 10));
+      }
+    } catch (_) {
+      // Don't leave user stuck even if Firestore write fails.
     }
-
-    // Production mode: role stays 'citizen', a pending request is filed,
-    // and an existing officer has to approve it from OfficerRequestsScreen.
-    final batch = FirebaseFirestore.instance.batch();
-    final requestRef =
-        FirebaseFirestore.instance.collection('officer_requests').doc(user.uid);
-
-    batch.update(userRef, {'onboarded': true});
-    batch.set(requestRef, {
-      'uid': user.uid,
-      'phone': user.phoneNumber ?? '',
-      'status': 'requested',
-      'requestedAt': FieldValue.serverTimestamp(),
-    });
-
-    await batch.commit();
+    if (mounted) setState(() => _loading = false);
   }
 
   @override
